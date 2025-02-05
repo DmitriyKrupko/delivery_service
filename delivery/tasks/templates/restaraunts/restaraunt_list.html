@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список ресторанов для доставки</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .restaurant-list {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .restaurant {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        .restaurant:last-child {
+            border-bottom: none;
+        }
+        .restaurant h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        .restaurant p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .cuisine {
+            font-weight: bold;
+            color: #007BFF;
+        }
+        .address {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Список ресторанов для доставки</h1>
+
+    <div class="restaurant-list">
+        <div class="restaurant">
+            <h2>Ресторан "Вкусное место"</h2>
+            <p class="cuisine">Кухня: Итальянская</p>
+            <p class="address">Адрес: ул. Пушкина, д. 10</p>
+        </div>
+        <div class="restaurant">
+            <h2>Ресторан "Суши-Шоп"</h2>
+            <p class="cuisine">Кухня: Японская</p>
+            <p class="address">Адрес: пр-т Ленина, д. 20</p>
+        </div>
+        <div class="restaurant">
+            <h2>Ресторан "Постное меню"</h2>
+            <p class="cuisine">Кухня: Вегетарианская</p>
+            <p class="address">Адрес: ул. Гоголя, д. 5</p>
+        </div>
+        <div class="restaurant">
+            <h2>Ресторан "Мир Бургеров"</h2>
+            <p class="cuisine">Кухня: Американская</p>
+            <p class="address">Адрес: ул. Лермонтова, д. 15</p>
+        </div>
+        <div class="restaurant">
+            <h2>Ресторан "Мексиканский уголок"</h2>
+            <p class="cuisine">Кухня: Мексиканская</p>
+            <p class="address">Адрес: ул. Чехова, д. 12</p>
+        </div>
+    </div>
+
+</body>
+</html>
