@@ -8,5 +8,5 @@ def cafe_list(request):
         title = request.POST.get('title')
         if title:
             Restaurants.objects.create(title=title)
-            return redirect('task_list')
-    return render(request, 'tasks/task_list.html', {'tasks': tasks})
+            return redirect('restarunt_list')
+    return render(request, 'restarunts/restarunt_list.html', {'tasks': tasks})
