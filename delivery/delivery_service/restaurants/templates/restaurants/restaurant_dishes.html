@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блюда из {{ restaurant.name }}</title>
+</head>
+<body>
+    <h1>Блюда из {{ restaurant.name }}</h1>
+    <ul>
+        {% for dish in dishes %}
+            <li>
+                <h2>{{ dish.name }}</h2>
+                <p>{{ dish.description }}</p>
+                <p>Цена: {{ dish.price }} руб.</p>
+                {% if dish.image %}
+                    <img src="{{ dish.image.url }}" alt="{{ dish.name }}" style="max-width: 200px;">
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>Нет доступных блюд для данного ресторана.</li>
+        {% endfor %}
+    </ul>
+    <a href="templates\restaurants\index.html">Назад на главную страницу</a> <!-- Добавьте URL на главную страницу -->
+</body>
+</html>
