@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сервисы доставки</title>
+</head>
+<body>
+    <h1>Список ресторанов</h1>
+    <ul>
+        {% for restaurant in restaurants %}
+            <li>
+                <strong>{{ restaurant.name }}</strong> <br>
+                Адрес: {{ restaurant.address }} <br>
+                Телефон: {{ restaurant.phone_number }} <br>
+                Плата за доставку: {{ restaurant.delivery_fee }} руб.
+            </li>
+        {% empty %}
+            <li>Рестораны не найдены.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

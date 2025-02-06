@@ -1,5 +1,5 @@
 """
-URL configuration for delivery project.
+URL configuration for delivery_service project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -18,10 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', name='restarunts_list'),
-]
-
-urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('restaraunts.urls')),
+    path('', include('restaurants.urls')),
 ]
