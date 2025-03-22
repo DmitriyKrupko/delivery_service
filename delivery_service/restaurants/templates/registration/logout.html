@@ -1,0 +1,9 @@
+{% extends 'restaurants/base.html' %}
+
+{% block content %}
+<div class="auth-card">
+    <h2>Вы вышли из системы</h2>
+    <p>Спасибо за посещение нашего сервиса!</p>
+    <a href="{% url 'home' %}" class="btn">На главную</a>
+</div>
+{% endblock %}

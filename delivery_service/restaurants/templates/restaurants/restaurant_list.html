@@ -1,19 +1,49 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Список ресторанов</title>
+    <title>Рестораны</title>
+    <link rel="stylesheet" href="{% static 'restaurants/css/styles.css' %}">
 </head>
 <body>
-    <h1>Список ресторанов</h1>
-    <ul>
-        {% for restaurant in restaurants %}
-            <li>
-                <a href="{% url 'dish_list' restaurant.id %}">{{ restaurant.name }}</a>
-                <p>{{ restaurant.description }}</p>
-            </li>
-        {% endfor %}
-    </ul>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Главная</a></li>
+                {% if user.is_authenticated %}
+                    <!-- Показываем кнопку "Профиль" и "Выйти" для авторизованных пользователей -->
+                    <li><a href="{% url 'profile' %}">Профиль</a></li>
+                    <li><a href="{% url 'logout' %}">Выйти</a></li>
+                {% else %}
+                    <!-- Показываем кнопки "Войти" и "Регистрация" для неавторизованных пользователей -->
+                    <li><a href="{% url 'login' %}">Войти</a></li>
+                    <li><a href="{% url 'register' %}">Регистрация</a></li>
+                {% endif %}
+                <li><a href="{% url 'restaurant_list' %}">Рестораны</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Наши рестораны</h1>
+        <div class="restaurant-list">
+            {% for restaurant in restaurants %}
+                <div class="restaurant-card">
+                    <a href="{% url 'dish_list' restaurant.id %}">
+                        <h2>{{ restaurant.name }}</h2>
+                    </a>
+                    <p>{{ restaurant.description }}</p>
+                    <p>📍 {{ restaurant.address }}</p>
+                    <p>📞 {{ restaurant.phone }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2023 FoodDelivery. Все права защищены.</p>
+    </footer>
 </body>
 </html>

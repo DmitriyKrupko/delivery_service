@@ -1,12 +1,29 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    path('', views.restaurant_list, name='restaurant_list'),
-    path('restaurant/<int:restaurant_id>/', views.dish_list, name='dish_list'),
-    path('', views.home, name='home'),  # Главная страница
+    # Главная страница должна быть первой
+    path('', views.home, name='home'),
+    
+    # Список ресторанов
     path('restaurants/', views.restaurant_list, name='restaurant_list'),
-    path('restaurant/<int:restaurant_id>/', views.dish_list, name='dish_list'),
-    path('profile/', views.profile, name='profile'),  # Профиль пользователя
-    path('tracking/', views.order_tracking, name='order_tracking'),  # Отслеживание заказов
+    
+    # Блюда конкретного ресторана
+    path('restaurants/<int:restaurant_id>/', views.dish_list, name='dish_list'),
+    
+    # Профиль и отслеживание
+    # Маршрут для страницы профиля
+    path('profile/', views.profile, name='profile'),
+    
+    #Отслеживание
+    path('tracking/', views.order_tracking, name='order_tracking'),
+   
+    #Регистрация
+    path('register/', views.register, name='register'),
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('profile/', views.profile, name='profile'),
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
 ]

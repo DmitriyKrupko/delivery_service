@@ -1,23 +1,39 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Меню ресторана {{ restaurant.name }}</title>
+    <title>Меню {{ restaurant.name }}</title>
+    <link rel="stylesheet" href="{% static 'restaurants/css/styles.css' %}">
 </head>
 <body>
-    <h1>{{ restaurant.name }}</h1>
-    <p>{{ restaurant.description }}</p>
-    <h2>Меню:</h2>
-    <ul>
-        {% for dish in dishes %}
-            <li>
-                <h3>{{ dish.name }}</h3>
-                <p>{{ dish.description }}</p>
-                <p>Цена: {{ dish.price }} руб.</p>
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'restaurant_list' %}">Назад к списку ресторанов</a>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Главная</a></li>
+                <li><a href="{% url 'restaurant_list' %}">Назад к ресторанам</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>{{ restaurant.name }}</h1>
+        <p class="restaurant-description">{{ restaurant.description }}</p>
+        
+        <div class="dish-list">
+            {% for dish in dishes %}
+                <div class="dish-card">
+                    <h3>{{ dish.name }}</h3>
+                    <p>{{ dish.description }}</p>
+                    <p class="dish-price">{{ dish.price }} ₽</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2023 FoodDelivery. Все права защищены.</p>
+    </footer>
 </body>
 </html>

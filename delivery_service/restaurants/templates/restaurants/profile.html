@@ -1,32 +1,106 @@
+{% extends 'restaurants/base.html' %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль пользователя</title>
-    <link rel="stylesheet" href="{% static 'restaurants/css/styles.css' %}">
-</head>
-<body>
-    <header>
-        <h1>Профиль пользователя</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}">Главная</a></li>
-                <li><a href="{% url 'restaurant_list' %}">Рестораны</a></li>
-                <li><a href="{% url 'order_tracking' %}">Отследить заказ</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section>
-            <h2>Ваши данные</h2>
-            <p>Имя: Пользователь</p>
-            <p>Email: user@example.com</p>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2023 Сервис доставки. Все права защищены.</p>
-    </footer>
-</body>
-</html>
+<div class="profile-section">
+    <h2 class="section-title">Личные данные</h2>
+    <div class="avatar-container">
+        <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'restaurants/img/default-avatar.png' %}{% endif %}" alt="Аватар">
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Имя:</label>
+                {{ profile_form.first_name }}
+            </div>
+            <div class="form-group">
+                <label>Фамилия:</label>
+                {{ profile_form.last_name }}
+            </div>
+            <div class="form-group">
+                <label>Email:</label>
+                {{ profile_form.email }}
+            </div>
+            <div class="form-group">
+                <label>Телефон:</label>
+                {{ profile_form.phone }}
+            </div>
+            <div class="form-group">
+                <label>Аватар:</label>
+                {{ profile_form.avatar }}
+            </div>
+        </div>
+        <button type="submit" name="profile_submit" class="btn">Сохранить изменения</button>
+    </form>
+</div>
+
+<div class="profile-section">
+    <h2 class="section-title">Мои адреса</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Город:</label>
+                {{ address_form.city }}
+            </div>
+            <div class="form-group">
+                <label>Улица:</label>
+                {{ address_form.street }}
+            </div>
+            <div class="form-group">
+                <label>Дом:</label>
+                {{ address_form.house }}
+            </div>
+            <div class="form-group">
+                <label>Квартира:</label>
+                {{ address_form.apartment }}
+            </div>
+            <div class="form-group full-width">
+                <label>Комментарий:</label>
+                {{ address_form.comment }}
+            </div>
+        </div>
+        <button type="submit" name="address_submit" class="btn">Добавить адрес</button>
+    </form>
+    
+    <div class="address-list">
+        {% for address in request.user.addresses.all %}
+        <div class="address-card">
+            <div class="address-content">
+                <p class="address-line">{{ address.city }}, ул. {{ address.street }}, д. {{ address.house }}</p>
+                {% if address.apartment %}
+                <p class="address-line">Кв. {{ address.apartment }}</p>
+                {% endif %}
+                {% if address.comment %}
+                <p class="address-comment">{{ address.comment }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="profile-section">
+    <h2 class="section-title">История заказов</h2>
+    <div class="order-history">
+        {% for order in request.user.orders.all %}
+        <div class="order-card">
+            <div class="order-header">
+                <h3>Заказ #{{ order.id }}</h3>
+                <span class="order-status">{{ order.get_status_display }}</span>
+            </div>
+            <div class="order-details">
+                <p>Ресторан: {{ order.restaurant.name }}</p>
+                <p>Дата: {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                <p class="order-total">Сумма: {{ order.total }} ₽</p>
+            </div>
+        </div>
+        {% empty %}
+        <p class="empty-message">Вы ещё не сделали ни одного заказа</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
