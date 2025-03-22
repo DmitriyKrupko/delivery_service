@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя</title>
+    <link rel="stylesheet" href="{% static 'restaurants/css/styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Профиль пользователя</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Главная</a></li>
+                <li><a href="{% url 'restaurant_list' %}">Рестораны</a></li>
+                <li><a href="{% url 'order_tracking' %}">Отследить заказ</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Ваши данные</h2>
+            <p>Имя: Пользователь</p>
+            <p>Email: user@example.com</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Сервис доставки. Все права защищены.</p>
+    </footer>
+</body>
+</html>

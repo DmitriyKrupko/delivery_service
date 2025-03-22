@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <link rel="stylesheet" href="{% static 'restaurants/css/styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Добро пожаловать в сервис доставки!</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'profile' %}">Профиль</a></li>
+                <li><a href="{% url 'restaurant_list' %}">Рестораны</a></li>
+                <li><a href="{% url 'order_tracking' %}">Отследить заказ</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Почему выбирают нас?</h2>
+            <p>Быстрая доставка, широкий выбор ресторанов и удобное отслеживание заказов.</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Сервис доставки. Все права защищены.</p>
+    </footer>
+</body>
+</html>

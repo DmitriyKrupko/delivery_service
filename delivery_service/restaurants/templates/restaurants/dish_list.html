@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Меню ресторана {{ restaurant.name }}</title>
+</head>
+<body>
+    <h1>{{ restaurant.name }}</h1>
+    <p>{{ restaurant.description }}</p>
+    <h2>Меню:</h2>
+    <ul>
+        {% for dish in dishes %}
+            <li>
+                <h3>{{ dish.name }}</h3>
+                <p>{{ dish.description }}</p>
+                <p>Цена: {{ dish.price }} руб.</p>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'restaurant_list' %}">Назад к списку ресторанов</a>
+</body>
+</html>
