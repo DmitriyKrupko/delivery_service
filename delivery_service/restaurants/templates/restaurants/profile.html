@@ -67,7 +67,7 @@
     </form>
     
     <div class="address-list">
-        {% for address in request.user.addresses.all %}
+        {% for address in request.user.delivery_addresses.all %}
         <div class="address-card">
             <div class="address-content">
                 <p class="address-line">{{ address.city }}, ул. {{ address.street }}, д. {{ address.house }}</p>

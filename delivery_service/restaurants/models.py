@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 from django.db import models
 
 # Create your models here.
@@ -27,20 +28,18 @@ class Dish(models.Model):
     class Meta:
         verbose_name = "Блюдо"
         verbose_name_plural = "Блюда"
-
 class CustomUser(AbstractUser):
-    phone = models.CharField(max_length=20, blank=True, verbose_name="Телефон")
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name="Аватар")
-
+    
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-
+    
     def __str__(self):
         return self.username
-
 class DeliveryAddress(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='addresses')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='delivery_addresses')
     city = models.CharField(max_length=100, verbose_name="Город")
     street = models.CharField(max_length=100, verbose_name="Улица")
     house = models.CharField(max_length=10, verbose_name="Дом")
@@ -69,3 +68,21 @@ class OrderItem(models.Model):
     dish = models.ForeignKey('Dish', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+
+User = get_user_model()
+
+class UserAddress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_addresses')
+    city = models.CharField(max_length=100, verbose_name="Город")
+    street = models.CharField(max_length=100, verbose_name="Улица")
+    house = models.CharField(max_length=10, verbose_name="Дом")
+    apartment = models.CharField(max_length=10, blank=True, verbose_name="Квартира")
+    comment = models.TextField(blank=True, verbose_name="Комментарий")
+    is_primary = models.BooleanField(default=False, verbose_name="Основной адрес")
+
+    class Meta:
+        verbose_name = 'Адрес пользователя'
+        verbose_name_plural = 'Адреса пользователей'
+
+    def __str__(self):
+        return f"{self.city}, {self.street} {self.house}"

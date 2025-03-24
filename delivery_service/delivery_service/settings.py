@@ -138,6 +138,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = 'profile'
 LOGOUT_REDIRECT_URL = 'home'
+CSRF_COOKIE_SECURE = False    # Для разработки (True для production)
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000']  # Для разработки
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 

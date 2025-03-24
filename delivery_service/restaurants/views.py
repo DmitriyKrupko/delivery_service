@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from .models import Restaurant, Dish
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from .forms import CustomUserCreationForm, ProfileForm, AddressForm
+from .forms import CustomUserCreationForm, ProfileForm, AddressForm, RegisterForm
 
 def home(request):
     return render(request, 'restaurants/home.html')  # Убедитесь что этот путь верный!
@@ -36,24 +36,39 @@ def register(request):
 
 @login_required
 def profile(request):
+    profile_form = ProfileForm(instance=request.user)
+    address_form = AddressForm()
+    addresses = request.user.user_addresses.all()
+
     if request.method == 'POST':
-        profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
-        address_form = AddressForm(request.POST)
-        
-        if 'profile_submit' in request.POST and profile_form.is_valid():
-            profile_form.save()
-            return redirect('profile')
-            
-        if 'address_submit' in request.POST and address_form.is_valid():
-            address = address_form.save(commit=False)
-            address.user = request.user
-            address.save()
-            return redirect('profile')
-    else:
-        profile_form = ProfileForm(instance=request.user)
-        address_form = AddressForm()
-    
+        if 'profile_submit' in request.POST:
+            profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                return redirect('profile')
+                
+        elif 'address_submit' in request.POST:
+            address_form = AddressForm(request.POST)
+            if address_form.is_valid():
+                address = address_form.save(commit=False)
+                address.user = request.user
+                address.save()
+                return redirect('profile')
+
     return render(request, 'restaurants/profile.html', {
         'profile_form': profile_form,
         'address_form': address_form,
+        'addresses': addresses
     })
+
+def register(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # Автоматический вход после регистрации
+            return redirect('profile')  # Перенаправление на профиль
+    else:
+        form = RegisterForm()
+    
+    return render(request, 'registration/register.html', {'form': form})
