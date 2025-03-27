@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-section">
+        <h1 class="section-title">Детали заказа #{{ order.id }}</h1>
+        
+        <div class="order-header">
+            <div>
+                <p><strong>Дата заказа:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Статус:</strong> <span class="order-status">{{ order.get_status_display }}</span></p>
+            </div>
+            <div>
+                <p class="order-total">Итого: {{ order.total_price }} ₽</p>
+            </div>
+        </div>
+
+        <div class="delivery-info">
+            <h3>Информация о доставке</h3>
+            <p><strong>Адрес:</strong> {{ order.delivery_address }}</p>
+            <p><strong>Контактный телефон:</strong> {{ order.phone_number }}</p>
+            {% if order.comments %}
+            <p><strong>Комментарий:</strong> {{ order.comments }}</p>
+            {% endif %}
+        </div>
+
+        <div class="order-items">
+            <h3>Состав заказа</h3>
+            <div class="dish-list">
+                {% for item in order.items.all %}
+                <div class="dish-card">
+                    <div class="dish-info">
+                        <h3>{{ item.dish.name }}</h3>
+                        <p>{{ item.dish.description }}</p>
+                    </div>
+                    <div class="dish-details">
+                        <p>Количество: {{ item.quantity }}</p>
+                        <p class="dish-price">{{ item.price }} ₽</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="order-actions">
+            {% if order.status == 'new' %}
+                <form method="post" action="{% url 'order_cancel' order.id %}">
+            {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Отменить заказ</button>
+            </form>
+            {% endif %}
+    <a href="{% url 'order_history' %}" class="btn">Вернуться к истории заказов</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

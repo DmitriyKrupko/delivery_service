@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Рестораны</title>
     <link rel="stylesheet" href="{% static 'restaurants/css/styles.css' %}">
+    <style>
+        
+    </style>
 </head>
 <body>
     <header>
@@ -13,11 +16,9 @@
             <ul>
                 <li><a href="{% url 'home' %}">Главная</a></li>
                 {% if user.is_authenticated %}
-                    <!-- Показываем кнопку "Профиль" и "Выйти" для авторизованных пользователей -->
                     <li><a href="{% url 'profile' %}">Профиль</a></li>
                     <li><a href="{% url 'logout' %}">Выйти</a></li>
                 {% else %}
-                    <!-- Показываем кнопки "Войти" и "Регистрация" для неавторизованных пользователей -->
                     <li><a href="{% url 'login' %}">Войти</a></li>
                     <li><a href="{% url 'register' %}">Регистрация</a></li>
                 {% endif %}
@@ -34,9 +35,24 @@
                     <a href="{% url 'dish_list' restaurant.id %}">
                         <h2>{{ restaurant.name }}</h2>
                     </a>
-                    <p>{{ restaurant.description }}</p>
+                    
+                    <p class="cuisine-type">Американский фастфуд • Европейская кухня</p>
+                    
+                    <p>{{ restaurant.description|default:"Сетевой ресторан быстрого питания с бургерами, картофелем фри и свежими салатами" }}</p>
+                    
+                    <div class="restaurant-meta">
+                        <span class="rating">4.7 ★ (2500+)</span>
+                        <span class="delivery-info">30-45 мин • от 15 руб</span>
+                    </div>
+                    
                     <p>📍 {{ restaurant.address }}</p>
-                    <p>📞 {{ restaurant.phone }}</p>
+                    <p>📞 {{ restaurant.phone|default:"+375 (29) 123-45-67" }}</p>
+                    
+                    <ul class="highlights">
+                        <li>✓ Биг Мак с двумя котлетами</li>
+                        <li>✓ Детские наборы с игрушками</li>
+                        <li>✓ Комбо-обеды до -30%</li>
+                    </ul>
                 </div>
             {% endfor %}
         </div>

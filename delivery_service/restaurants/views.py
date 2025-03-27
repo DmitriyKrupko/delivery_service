@@ -1,8 +1,9 @@
 from django.shortcuts import redirect, render, get_object_or_404
-from .models import Restaurant, Dish
+from .models import Restaurant, Dish, Cart, CartItem, Order, OrderItem
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from .forms import CustomUserCreationForm, ProfileForm, AddressForm, RegisterForm
+from .forms import CustomUserCreationForm, ProfileForm, AddressForm, RegisterForm, CartItemForm
+from django.contrib import messages
 
 def home(request):
     return render(request, 'restaurants/home.html')  # Убедитесь что этот путь верный!
@@ -72,3 +73,94 @@ def register(request):
         form = RegisterForm()
     
     return render(request, 'registration/register.html', {'form': form})
+
+@login_required
+def cart_view(request):
+    cart = request.user.cart
+    items = cart.items.select_related('dish')
+    return render(request, 'restaurants/cart.html', {
+        'cart': cart,
+        'items': items
+    })
+
+@login_required
+def add_to_cart(request, dish_id):
+    dish = get_object_or_404(Dish, id=dish_id)
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        dish=dish,
+        defaults={'quantity': 1}
+    )
+    
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
+    
+    return redirect('cart')
+
+@login_required
+def update_cart_item(request, item_id):
+    cart_item = get_object_or_404(CartItem, id=item_id, cart=request.user.cart)
+    
+    if request.method == 'POST':
+        form = CartItemForm(request.POST, instance=cart_item)
+        if form.is_valid():
+            form.save()
+    return redirect('cart')
+
+@login_required
+def remove_from_cart(request, item_id):
+    cart_item = get_object_or_404(CartItem, id=item_id, cart=request.user.cart)
+    cart_item.delete()
+    return redirect('cart')
+
+@login_required
+def checkout(request):
+    cart = request.user.cart
+    if request.method == 'POST':
+        # Создаем заказ
+        order = Order.objects.create(
+            user=request.user,
+            restaurant=cart.items.first().dish.restaurant,
+            total=cart.total_price,
+            delivery_address=request.POST.get('delivery_address'),
+            comments=request.POST.get('comments')
+        )
+        
+        # Переносим товары из корзины в заказ
+        for item in cart.items.all():
+            OrderItem.objects.create(
+                order=order,
+                dish=item.dish,
+                quantity=item.quantity,
+                price=item.dish.price
+            )
+        
+        # Очищаем корзину
+        cart.items.all().delete()
+        
+        return redirect('order_detail', order_id=order.id)
+    
+    return render(request, 'restaurants/checkout.html', {
+        'cart': cart,
+        'addresses': request.user.addresses.all()
+    })
+
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'restaurants/order_detail.html', {'order': order})
+
+def order_cancel(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    # Проверяем, можно ли отменить заказ (только если статус "новый")
+    if order.status == 'new':
+        order.status = 'canceled'
+        order.save()
+        messages.success(request, f"Заказ #{order.id} успешно отменен")
+    else:
+        messages.error(request, "Невозможно отменить заказ с текущим статусом")
+    
+    return redirect('order_detail', order_id=order.id)

@@ -16,14 +16,65 @@ class Restaurant(models.Model):
         verbose_name = "Ресторан"
         verbose_name_plural = "Рестораны"
 
-class Dish(models.Model):
-    name = models.CharField(max_length=100, verbose_name="Название блюда")
-    description = models.TextField(verbose_name="Описание блюда")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена блюда")
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name="dishes", verbose_name="Ресторан")
+
+class Category(models.Model):
+    """Категории блюд (например, Бургеры, Напитки)"""
+    name = models.CharField(
+        max_length=50,
+        verbose_name="Название категории"
+    )
+    restaurant = models.ForeignKey(
+        'Restaurant',
+        on_delete=models.CASCADE,
+        related_name='categories',
+        verbose_name="Ресторан"
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Порядок сортировки"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Активна"
+    )
+
+    class Meta:
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
+        ordering = ['order', 'name']
+        unique_together = ('name', 'restaurant')
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.restaurant.name})"
+        
+class Dish(models.Model):
+    DISH_TYPE_CHOICES = [
+        ('burger', 'Бургер'),
+        ('snack', 'Закуска'),
+        ('drink', 'Напиток'),
+        ('salad', 'Салат'),
+        ('dessert', 'Десерт'),
+    ]
+    
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+    dish_type = models.CharField(
+        max_length=20,
+        choices=DISH_TYPE_CHOICES,
+        default='burger'
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name='dishes',
+        verbose_name="Категория"
+    )
+    image = models.ImageField(upload_to='dishes/', null=True, blank=True)
+    is_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_dish_type_display()})"
 
     class Meta:
         verbose_name = "Блюдо"
@@ -86,3 +137,48 @@ class UserAddress(models.Model):
 
     def __str__(self):
         return f"{self.city}, {self.street} {self.house}"
+    
+    from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class Cart(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def total_price(self):
+        return sum(item.total_price for item in self.items.all())
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    dish = models.ForeignKey('Dish', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    special_requests = models.TextField(blank=True)
+
+    @property
+    def total_price(self):
+        return self.dish.price * self.quantity
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('new', 'Новый'),
+        ('preparing', 'Готовится'),
+        ('delivering', 'В пути'),
+        ('completed', 'Завершен'),
+        ('canceled', 'Отменен'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    restaurant = models.ForeignKey('Restaurant', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    delivery_address = models.TextField()
+    comments = models.TextField(blank=True)
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    dish = models.ForeignKey('Dish', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)

@@ -9,7 +9,9 @@ class RestaurantAdmin(admin.ModelAdmin):
 
 @admin.register(Dish)
 class DishAdmin(admin.ModelAdmin):
-    list_display = ('name', 'restaurant', 'price')
+    list_display = ('name', 'dish_type', 'price', 'category')
+    list_filter = ('dish_type', 'category')
+    search_fields = ('name',)
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'phone', 'is_staff')

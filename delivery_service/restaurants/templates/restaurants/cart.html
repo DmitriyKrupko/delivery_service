@@ -1,0 +1,43 @@
+{% extends 'restaurants/base.html' %}
+
+{% block content %}
+<div class="cart-container">
+    <h2>Ваша корзина</h2>
+    
+    {% if items %}
+    <div class="cart-items">
+        {% for item in items %}
+        <div class="cart-item">
+            <div class="item-info">
+                <h4>{{ item.dish.name }}</h4>
+                <p>{{ item.dish.description }}</p>
+                {% if item.special_requests %}
+                <p class="special-requests">Примечание: {{ item.special_requests }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="item-controls">
+                <form method="post" action="{% url 'update_cart' item.id %}">
+                    {% csrf_token %}
+                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
+                    <button type="submit">Обновить</button>
+                </form>
+                <a href="{% url 'remove_from_cart' item.id %}" class="btn-danger">Удалить</a>
+            </div>
+            
+            <div class="item-price">
+                {{ item.total_price }} ₽
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="cart-total">
+        <h3>Итого: {{ cart.total_price }} ₽</h3>
+        <a href="{% url 'checkout' %}" class="btn-primary">Оформить заказ</a>
+    </div>
+    {% else %}
+    <p>Ваша корзина пуста</p>
+    {% endif %}
+</div>
+{% endblock %}

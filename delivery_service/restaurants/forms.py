@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import CustomUser, DeliveryAddress, UserAddress
+from .models import CustomUser, DeliveryAddress, UserAddress, CartItem
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -30,3 +30,12 @@ class RegisterForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'phone', 'password1', 'password2')
+
+class CartItemForm(forms.ModelForm):
+    class Meta:
+        model = CartItem
+        fields = ['quantity', 'special_requests']
+        widgets = {
+            'quantity': forms.NumberInput(attrs={'min': 1, 'class': 'form-control'}),
+            'special_requests': forms.Textarea(attrs={'rows': 2}),
+        }

@@ -1,0 +1,37 @@
+{% extends 'restaurants/base.html' %}
+
+{% block content %}
+<div class="checkout-container">
+    <h2>Оформление заказа</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="delivery-address">
+            <h3>Адрес доставки</h3>
+            <select name="delivery_address" required>
+                {% for address in addresses %}
+                <option value="{{ address.full_address }}">{{ address.full_address }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="order-comments">
+            <h3>Комментарий к заказу</h3>
+            <textarea name="comments" rows="4"></textarea>
+        </div>
+        
+        <div class="order-summary">
+            <h3>Ваш заказ</h3>
+            <ul>
+                {% for item in cart.items.all %}
+                <li>{{ item.dish.name }} x{{ item.quantity }} - {{ item.total_price }} ₽</li>
+                {% endfor %}
+            </ul>
+            <h4>Итого: {{ cart.total_price }} ₽</h4>
+        </div>
+        
+        <button type="submit" class="btn-primary">Подтвердить заказ</button>
+    </form>
+</div>
+{% endblock %}
