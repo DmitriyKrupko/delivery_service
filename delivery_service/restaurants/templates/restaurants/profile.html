@@ -58,6 +58,14 @@
                 <label>Квартира:</label>
                 {{ address_form.apartment }}
             </div>
+            <div class="form-group">
+                <label>Подъезд:</label>
+                {{ address_form.entrance }}
+            </div>
+            <div class="form-group">
+                <label>Этаж:</label>
+                {{ address_form.floor }}
+            </div>
             <div class="form-group full-width">
                 <label>Комментарий:</label>
                 {{ address_form.comment }}
@@ -67,18 +75,36 @@
     </form>
     
     <div class="address-list">
-        {% for address in request.user.delivery_addresses.all %}
-        <div class="address-card">
+        {% for address in addresses %}  <!-- Изменено с request.user.delivery_addresses.all -->
+        <div class="address-card {% if address.is_primary %}primary-address{% endif %}">
             <div class="address-content">
                 <p class="address-line">{{ address.city }}, ул. {{ address.street }}, д. {{ address.house }}</p>
                 {% if address.apartment %}
                 <p class="address-line">Кв. {{ address.apartment }}</p>
                 {% endif %}
+                {% if address.entrance %}
+                <p class="address-line">Подъезд {{ address.entrance }}</p>
+                {% endif %}
+                {% if address.floor %}
+                <p class="address-line">Этаж {{ address.floor }}</p>
+                {% endif %}
                 {% if address.comment %}
                 <p class="address-comment">{{ address.comment }}</p>
                 {% endif %}
             </div>
+            <div class="address-actions">
+                <form method="post" action="{% url 'set_primary_address' address.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-small">Сделать основным</button>
+                </form>
+                <form method="post" action="{% url 'delete_address' address.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-small danger">Удалить</button>
+                </form>
+            </div>
         </div>
+        {% empty %}
+        <p class="empty-message">Нет сохраненных адресов</p>
         {% endfor %}
     </div>
 </div>
@@ -86,16 +112,19 @@
 <div class="profile-section">
     <h2 class="section-title">История заказов</h2>
     <div class="order-history">
-        {% for order in request.user.orders.all %}
+        {% for order in request.user.orders.all|dictsortreversed:"created_at" %}
         <div class="order-card">
             <div class="order-header">
                 <h3>Заказ #{{ order.id }}</h3>
-                <span class="order-status">{{ order.get_status_display }}</span>
+                <span class="order-status {{ order.status }}">{{ order.get_status_display }}</span>
             </div>
             <div class="order-details">
-                <p>Ресторан: {{ order.restaurant.name }}</p>
-                <p>Дата: {{ order.created_at|date:"d.m.Y H:i" }}</p>
-                <p class="order-total">Сумма: {{ order.total }} ₽</p>
+                <p><strong>Ресторан:</strong> {{ order.restaurant.name }}</p>
+                <p><strong>Дата:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Адрес:</strong> {{ order.delivery_address }}</p>
+                <p><strong>Способ оплаты:</strong> {{ order.get_payment_method_display }}</p>
+                <p class="order-total"><strong>Сумма:</strong> {{ order.total }} ₽ (с доставкой: {{ order.total|add:order.delivery_fee }} ₽)</p>
+                <a href="{% url 'order_detail' order.id %}" class="btn-small">Подробнее</a>
             </div>
         </div>
         {% empty %}

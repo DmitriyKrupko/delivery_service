@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render, get_object_or_404
-from .models import Restaurant, Dish, Cart, CartItem, Order, OrderItem
+from .models import Restaurant, Dish, Cart, CartItem, Order, OrderItem, UserAddress
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from .forms import CustomUserCreationForm, ProfileForm, AddressForm, RegisterForm, CartItemForm
@@ -17,10 +17,6 @@ def dish_list(request, restaurant_id):
     dishes = restaurant.dishes.all()
     return render(request, 'restaurants/dish_list.html', {'restaurant': restaurant, 'dishes': dishes})
 
-@login_required
-def profile(request):
-    return render(request, 'restaurants/profile.html')
-
 def order_tracking(request):
     return render(request, 'restaurants/order_tracking.html')
 
@@ -35,11 +31,17 @@ def register(request):
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
+def profile(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
 @login_required
 def profile(request):
     profile_form = ProfileForm(instance=request.user)
     address_form = AddressForm()
-    addresses = request.user.user_addresses.all()
+    
+    # Используем правильный related_name (addresses вместо user_addresses)
+    addresses = request.user.addresses.all()  # Изменено здесь
 
     if request.method == 'POST':
         if 'profile_submit' in request.POST:
@@ -164,3 +166,20 @@ def order_cancel(request, order_id):
         messages.error(request, "Невозможно отменить заказ с текущим статусом")
     
     return redirect('order_detail', order_id=order.id)
+
+@login_required
+def set_primary_address(request, address_id):
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    # Сбросить все primary
+    request.user.addresses.update(is_primary=False)
+    # Установить выбранный
+    address.is_primary = True
+    address.save()
+    return redirect('profile')
+
+@login_required
+def delete_address(request, address_id):
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    address.delete()
+    return redirect('profile')
+

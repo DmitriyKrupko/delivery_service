@@ -6,11 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Рестораны</title>
     <link rel="stylesheet" href="{% static 'restaurants/css/styles.css' %}">
-    <style>
-        
-    </style>
 </head>
 <body>
+    <!-- Шапка остается без изменений -->
     <header>
         <nav>
             <ul>
@@ -36,23 +34,38 @@
                         <h2>{{ restaurant.name }}</h2>
                     </a>
                     
-                    <p class="cuisine-type">Американский фастфуд • Европейская кухня</p>
+                    <!-- Удаляем фиксированное описание кухни -->
+                    {% if restaurant.cuisine_type %}
+                        <p class="cuisine-type">{{ restaurant.cuisine_type }}</p>
+                    {% endif %}
                     
-                    <p>{{ restaurant.description|default:"Сетевой ресторан быстрого питания с бургерами, картофелем фри и свежими салатами" }}</p>
+                    <!-- Выводим уникальное описание из базы -->
+                    <p class="description">{{ restaurant.description }}</p>
                     
                     <div class="restaurant-meta">
-                        <span class="rating">4.7 ★ (2500+)</span>
-                        <span class="delivery-info">30-45 мин • от 15 руб</span>
+                        <!-- Можно добавить реальный рейтинг, если есть в модели -->
+                        <span class="rating">{{ restaurant.rating|default:"4.5" }} ★ ({{ restaurant.reviews_count|default:"100+" }})</span>
+                        <span class="delivery-info">
+                            {% if restaurant.delivery_time %}
+                                {{ restaurant.delivery_time }} мин •
+                            {% else %}
+                                30-45 мин •
+                            {% endif %}
+                            от {{ restaurant.min_order|default:"15" }} руб
+                        </span>
                     </div>
                     
                     <p>📍 {{ restaurant.address }}</p>
-                    <p>📞 {{ restaurant.phone|default:"+375 (29) 123-45-67" }}</p>
+                    <p>📞 {{ restaurant.phone }}</p>
                     
-                    <ul class="highlights">
-                        <li>✓ Биг Мак с двумя котлетами</li>
-                        <li>✓ Детские наборы с игрушками</li>
-                        <li>✓ Комбо-обеды до -30%</li>
-                    </ul>
+                    <!-- Удаляем фиксированные highlights или заменяем на данные из базы -->
+                    {% if restaurant.highlights %}
+                        <ul class="highlights">
+                            {% for highlight in restaurant.highlights.all %}
+                                <li>✓ {{ highlight.text }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

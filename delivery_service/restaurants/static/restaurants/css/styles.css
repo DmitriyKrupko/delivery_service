@@ -458,3 +458,66 @@ textarea {
     color: #3498db;
     font-weight: 500;
 }
+
+.primary-address {
+    border-left: 4px solid #4CAF50;
+    padding-left: 10px;
+}
+
+.address-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-small {
+    padding: 5px 10px;
+    font-size: 0.9em;
+}
+
+.danger {
+    background-color: #f44336;
+}
+
+/* Стиль для типа кухни */
+.cuisine-type {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 8px;
+}
+
+/* Стиль для описания ресторана */
+.description {
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+/* Стиль для рейтинга */
+.rating {
+    color: #FFA500; /* Оранжевый */
+    font-weight: bold;
+}
+
+/* Стиль для времени доставки и мин. заказа */
+.delivery-info {
+    color: #28a745; /* Зеленый */
+    margin-left: 10px;
+}
+
+/* Стиль для списка преимуществ (highlights) */
+.highlights {
+    padding-left: 20px;
+    list-style-type: none;
+}
+
+.highlights li {
+    margin: 5px 0;
+    position: relative;
+}
+
+.highlights li:before {
+    content: "✓";
+    color: #28a745;
+    position: absolute;
+    left: -20px;
+}
