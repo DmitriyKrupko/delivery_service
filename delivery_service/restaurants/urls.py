@@ -35,4 +35,11 @@ urlpatterns = [
     path('orders/<int:order_id>/cancel/', views.order_cancel, name='order_cancel'),
     path('address/set-primary/<int:address_id>/', views.set_primary_address, name='set_primary_address'),
     path('address/delete/<int:address_id>/', views.delete_address, name='delete_address'),
+    path('menu/<int:restaurant_id>/', views.menu, name='menu'),
+    path('dish/<int:pk>/', views.DishDetailView.as_view(), name='dish_detail'),
+    path('add-to-cart/<int:dish_id>/', views.add_to_cart, name='add_to_cart'),
+    path('remove-from-cart/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('update-cart-item/<int:item_id>/', views.update_cart_item, name='update_cart_item'),
+    path('cart/', views.cart_view, name='cart'),
+    path('cart/count/', views.cart_count, name='cart_count'),
 ]

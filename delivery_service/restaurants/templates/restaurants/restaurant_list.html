@@ -31,6 +31,9 @@
             {% for restaurant in restaurants %}
                 <div class="restaurant-card">
                     <a href="{% url 'dish_list' restaurant.id %}">
+                        {% if restaurant.logo %}
+                            <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="restaurant-logo">
+                        {% endif %}
                         <h2>{{ restaurant.name }}</h2>
                     </a>
                     

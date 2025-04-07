@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            {% if dish.image %}
+            <img src="{{ dish.image.url }}" class="img-fluid rounded dish-detail-image" alt="{{ dish.name }}">
+            {% else %}
+            <div class="no-image-placeholder rounded">
+                <i class="fas fa-utensils"></i>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h1 class="dish-title">{{ dish.name }}</h1>
+            <p class="text-muted">{{ dish.restaurant.name }}</p>
+            
+            <div class="dish-meta mb-3">
+                <span class="badge badge-secondary">{{ dish.get_dish_type_display }}</span>
+                <span class="ml-2"><i class="fas fa-clock"></i> {{ dish.cooking_time }} мин</span>
+            </div>
+            
+            <div class="dish-price mb-3">
+                <span class="h4">{{ dish.price }} ₽</span>
+            </div>
+            
+            <div class="dish-description mb-4">
+                <p>{{ dish.description }}</p>
+            </div>
+            
+            <div class="dish-actions">
+                <div class="quantity-selector mb-3">
+                    <button class="btn btn-outline-secondary btn-minus" {% if in_cart <= 0 %}disabled{% endif %}>
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="quantity mx-2">{{ in_cart|default:0 }}</span>
+                    <button class="btn btn-outline-secondary btn-plus">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                
+                <button class="btn btn-primary btn-lg btn-block add-to-cart-btn">
+                    {% if in_cart %}Добавить еще{% else %}Добавить в корзину{% endif %}
+                </button>
+                
+                <a href="{% url 'menu' dish.restaurant.id %}" class="btn btn-outline-secondary btn-block mt-2">
+                    Вернуться в меню
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    const dishId = {{ dish.id }};
+    const addUrl = "{% url 'add_to_cart' dish.id %}";
+    const removeUrl = "{% url 'remove_from_cart' dish.id %}";
+    const updateUrl = "{% url 'update_cart_item' 0 %}".replace('0', 'ITEM_ID');
+    
+    function updateQuantity(quantity) {
+        $('.quantity').text(quantity);
+        $('.btn-minus').prop('disabled', quantity <= 0);
+        
+        if (quantity > 0) {
+            $('.add-to-cart-btn').text('Добавить еще');
+        } else {
+            $('.add-to-cart-btn').text('Добавить в корзину');
+        }
+    }
+    
+    $('.btn-plus').click(function() {
+        $.ajax({
+            url: addUrl,
+            method: 'GET',
+            success: function(response) {
+                const newQuantity = parseInt($('.quantity').text()) + 1;
+                updateQuantity(newQuantity);
+                updateCartCounter();
+            },
+            error: function(xhr) {
+                if (xhr.status === 403) {
+                    window.location.href = '{% url "login" %}?next=' + window.location.pathname;
+                }
+            }
+        });
+    });
+    
+    $('.btn-minus').click(function() {
+        $.ajax({
+            url: removeUrl,
+            method: 'GET',
+            success: function(response) {
+                const newQuantity = parseInt($('.quantity').text()) - 1;
+                updateQuantity(newQuantity);
+                updateCartCounter();
+            }
+        });
+    });
+    
+    $('.add-to-cart-btn').click(function() {
+        $.ajax({
+            url: addUrl,
+            method: 'GET',
+            success: function(response) {
+                updateQuantity(1);
+                updateCartCounter();
+            },
+            error: function(xhr) {
+                if (xhr.status === 403) {
+                    window.location.href = '{% url "login" %}?next=' + window.location.pathname;
+                }
+            }
+        });
+    });
+    
+    function updateCartCounter() {
+        $.get('{% url "cart_count" %}', function(data) {
+            $('#cart-counter').text(data.count);
+        });
+    }
+});
+</script>
+{% endblock %}

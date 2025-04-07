@@ -1,12 +1,15 @@
+import os
 from django.core.management.base import BaseCommand
+from django.core.files import File
+from django.conf import settings
 from restaurants.models import Restaurant
 
-class Command(BaseCommand):
-    help = 'Загрузка ресторанов Минска в базу данных'
+class Command(BaseCommand):  # Этот класс должен быть назван именно "Command"
+    help = 'Загрузка ресторанов в базу данных'
 
     def handle(self, *args, **options):
         restaurants_data = [
-    {
+            {
         "name": "Лидо",
         "description": "Ресторан белорусской кухни с домашней атмосферой. Специализируется на драниках, колдунах и других национальных блюдах. Есть детское меню.",
         "address": "пр-т Независимости, 49",
@@ -17,6 +20,7 @@ class Command(BaseCommand):
         "reviews_count": 1250,
         "delivery_time": 40,
         "min_order": 20,
+        "logo": "restaurants/logos/lido.png"
     },
     {
         "name": "Раковский Бровар",
@@ -29,6 +33,7 @@ class Command(BaseCommand):
         "reviews_count": 980,
         "delivery_time": 45,
         "min_order": 25,
+        "logo": "restaurants/logos/rakovskii-brovar.png"
     },
     {
         "name": "McDonald's",
@@ -41,27 +46,41 @@ class Command(BaseCommand):
         "reviews_count": 3200,
         "delivery_time": 30,
         "min_order": 15,
+        "logo": "restaurants/logos/McDonald’s.png"
     }
-]
+            # ... другие рестораны ...
+        ]
 
         for data in restaurants_data:
-            restaurant, created = Restaurant.objects.get_or_create(
-                name=data['name'],
-                defaults={
-                    'description': data['description'],
-                    'address': data['address'],
-                    'phone': data['phone'],
-                    'delivery_radius': data['delivery_radius'],
-                    'cuisine_type': data.get('cuisine_type', ''),
-                    'rating': data.get('rating', 0),
-                    'reviews_count': data.get('reviews_count', 0),
-                    'delivery_time': data.get('delivery_time', 45),
-                    'min_order': data.get('min_order', 15),
-                }
-            )
-            if created:
-                self.stdout.write(self.style.SUCCESS(f'Создан ресторан: {restaurant.name}'))
-            else:
-                self.stdout.write(self.style.WARNING(f'Ресторан {restaurant.name} уже существует'))
+            try:
+                # 1. Создаем/обновляем ресторан без логотипа
+                restaurant, created = Restaurant.objects.get_or_create(
+                    name=data['name'],
+                    defaults={
+                        k: v for k, v in data.items() 
+                        if k != 'logo'
+                    }
+                )
 
-        self.stdout.write(self.style.SUCCESS('Загрузка ресторанов завершена!'))
+                # 2. Загружаем логотип (если указан и файл существует)
+                if created and 'logo' in data:
+                    logo_path = os.path.join(settings.MEDIA_ROOT, data['logo'])
+                    if os.path.exists(logo_path):
+                        with open(logo_path, 'rb') as f:
+                            restaurant.logo.save(
+                                os.path.basename(data['logo']),
+                                File(f),
+                                save=True
+                            )
+                        self.stdout.write(f"Логотип добавлен для {restaurant.name}")
+                    else:
+                        self.stdout.write(self.style.WARNING(f"Файл лого не найден: {logo_path}"))
+
+                # 3. Уведомление о результате
+                msg = f"{'Создан' if created else 'Обновлен'} ресторан: {restaurant.name}"
+                self.stdout.write(self.style.SUCCESS(msg))
+
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Ошибка для {data.get('name')}: {str(e)}"))
+
+        self.stdout.write(self.style.SUCCESS("Загрузка завершена!")) 

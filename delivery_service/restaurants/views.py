@@ -1,12 +1,16 @@
 from django.shortcuts import redirect, render, get_object_or_404
-from .models import Restaurant, Dish, Cart, CartItem, Order, OrderItem, UserAddress
+from .models import Restaurant, Dish, Cart, CartItem, Order, OrderItem, UserAddress, Category
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from .forms import CustomUserCreationForm, ProfileForm, AddressForm, RegisterForm, CartItemForm
 from django.contrib import messages
+from django.views.generic import DetailView
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+
 
 def home(request):
-    return render(request, 'restaurants/home.html')  # Убедитесь что этот путь верный!
+    return render(request, 'restaurants/home.html')
 
 def restaurant_list(request):
     restaurants = Restaurant.objects.all()
@@ -183,3 +187,50 @@ def delete_address(request, address_id):
     address.delete()
     return redirect('profile')
 
+def menu(request, restaurant_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+    categories = restaurant.categories.filter(is_active=True).prefetch_related('dishes')
+    
+    # Собираем все блюда по категориям
+    menu_data = []
+    for category in categories:
+        dishes = category.dishes.filter(is_available=True)
+        if dishes.exists():
+            menu_data.append({
+                'category': category,
+                'dishes': dishes
+            })
+    
+    # Проверяем, есть ли у пользователя корзина
+    cart_items = []
+    if request.user.is_authenticated:
+        cart = Cart.objects.filter(user=request.user).first()
+        if cart:
+            cart_items = cart.items.values_list('dish_id', flat=True)
+    
+    return render(request, 'restaurants/menu.html', {
+        'restaurant': restaurant,
+        'menu_data': menu_data,
+        'cart_items': cart_items
+    })
+
+@method_decorator(login_required, name='dispatch')
+class DishDetailView(DetailView):
+    model = Dish
+    template_name = 'restaurants/dish_detail.html'
+    context_object_name = 'dish'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            cart = Cart.objects.filter(user=self.request.user).first()
+            if cart:
+                cart_item = cart.items.filter(dish=self.object).first()
+                context['in_cart'] = cart_item.quantity if cart_item else 0
+        return context
+    
+@login_required
+def cart_count(request):
+    cart = request.user.cart
+    count = cart.items.count() if hasattr(request.user, 'cart') else 0
+    return JsonResponse({'count': count})

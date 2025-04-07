@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ restaurant.name }}</h1>
+    <p>{{ restaurant.description }}</p>
+    
+    {% for category in categories %}
+    <div class="category-section">
+        <h2>{{ category.name }}</h2>
+        
+        <div class="row">
+            {% for dish in category.dishes.all %}
+            <div class="col-md-4 mb-4">
+                <div class="card dish-card">
+                    {% if dish.image %}
+                    <img src="{{ dish.image.url }}" class="card-img-top" alt="{{ dish.name }}">
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ dish.name }}</h5>
+                        <p class="card-text">{{ dish.description }}</p>
+                        <p class="price">{{ dish.price }} ₽</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

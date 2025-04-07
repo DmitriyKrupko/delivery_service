@@ -75,6 +75,12 @@ class Restaurant(models.Model):
         default=15, 
         verbose_name="Минимальный заказ"
         )
+    logo = models.ImageField(
+        upload_to='restaurants/logos/',
+        blank=True,
+        null=True,
+        verbose_name="Логотип"
+    )
 
     def __str__(self):
         return self.name
