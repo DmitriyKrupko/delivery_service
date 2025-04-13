@@ -39,80 +39,144 @@
 
 <div class="profile-section">
     <h2 class="section-title">Мои адреса</h2>
-    <form method="post">
+    <form method="post" class="address-form">
         {% csrf_token %}
         <div class="form-grid">
+            <!-- Основные поля -->
             <div class="form-group">
-                <label>Город:</label>
+                <label class="form-label">Город</label>
                 {{ address_form.city }}
             </div>
+            
             <div class="form-group">
-                <label>Улица:</label>
+                <label class="form-label">Улица</label>
                 {{ address_form.street }}
             </div>
-            <div class="form-group">
-                <label>Дом:</label>
-                {{ address_form.house }}
+
+            <!-- Сдвоенные поля для дома/квартиры -->
+            <div class="form-group double-field">
+                <div class="form-col">
+                    <label class="form-label">Дом</label>
+                    {{ address_form.house }}
+                </div>
+                <div class="form-col">
+                    <label class="form-label">Квартира</label>
+                    {{ address_form.apartment }}
+                </div>
             </div>
-            <div class="form-group">
-                <label>Квартира:</label>
-                {{ address_form.apartment }}
+
+            <!-- Сдвоенные поля для подъезда/этажа -->
+            <div class="form-group double-field">
+                <div class="form-col">
+                    <label class="form-label">Подъезд</label>
+                    {{ address_form.entrance }}
+                </div>
+                <div class="form-col">
+                    <label class="form-label">Этаж</label>
+                    {{ address_form.floor }}
+                </div>
             </div>
-            <div class="form-group">
-                <label>Подъезд:</label>
-                {{ address_form.entrance }}
-            </div>
-            <div class="form-group">
-                <label>Этаж:</label>
-                {{ address_form.floor }}
-            </div>
+
+            <!-- Комментарий -->
             <div class="form-group full-width">
-                <label>Комментарий:</label>
+                <label class="form-label">Комментарий для курьера</label>
                 {{ address_form.comment }}
             </div>
         </div>
-        <button type="submit" name="address_submit" class="btn">Добавить адрес</button>
+        <button type="submit" name="address_submit" class="btn btn-primary">Сохранить адрес</button>
     </form>
     
+    <!-- Список адресов -->
     <div class="address-list">
-        {% for address in addresses %}  <!-- Изменено с request.user.delivery_addresses.all -->
-        <div class="address-card {% if address.is_primary %}primary-address{% endif %}">
-            <div class="address-content">
-                <p class="address-line">{{ address.city }}, ул. {{ address.street }}, д. {{ address.house }}</p>
-                {% if address.apartment %}
-                <p class="address-line">Кв. {{ address.apartment }}</p>
+    {% for address in addresses %}
+    <div class="address-card {% if address.is_primary %}primary-address{% endif %}">
+        <div class="address-header">
+            <h4>Адрес #{{ forloop.counter }}</h4>
+            {% if address.is_primary %}
+            <span class="primary-badge">Основной</span>
+            {% endif %}
+        </div>
+        
+        <div class="address-content">
+            <p class="address-line">
+                {{ address.city }}, ул. {{ address.street }}, д. {{ address.house }}
+                {% if address.apartment %}, кв. {{ address.apartment }}{% endif %}
+            </p>
+            
+            <div class="address-details">
+                {% if address.entrance or address.floor %}
+                <div class="detail-item">
+                    <span class="detail-label">Подъезд:</span>
+                    {{ address.entrance|default:"-" }}
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Этаж:</span>
+                    {{ address.floor|default:"-" }}
+                </div>
                 {% endif %}
-                {% if address.entrance %}
-                <p class="address-line">Подъезд {{ address.entrance }}</p>
-                {% endif %}
-                {% if address.floor %}
-                <p class="address-line">Этаж {{ address.floor }}</p>
-                {% endif %}
+                
                 {% if address.comment %}
-                <p class="address-comment">{{ address.comment }}</p>
+                <div class="detail-item">
+                    <span class="detail-label">Комментарий:</span>
+                    {{ address.comment }}
+                </div>
                 {% endif %}
             </div>
-            <div class="address-actions">
-                <form method="post" action="{% url 'set_primary_address' address.id %}">
+        </div>
+        
+        <div class="address-actions">
+            <form method="post" action="{% url 'set_primary_address' address.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-small">Сделать основным</button>
+    </form>
+    <form method="post" action="{% url 'delete_address' address.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-small danger">Удалить</button>
+    </form>
+</div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <p>У вас пока нет сохраненных адресов</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Активные заказы -->
+<div class="profile-section">
+    <h2 class="section-title">Активные заказы</h2>
+    <div class="order-history">
+        {% for order in active_orders %}
+        <div class="order-card {% if order.status == 'new' %}highlight{% endif %}">
+            <div class="order-header">
+                <h3>Заказ #{{ order.id }}</h3>
+                <span class="order-status {{ order.status }}">{{ order.get_status_display }}</span>
+            </div>
+            <div class="order-details">
+                <p><strong>Ресторан:</strong> {{ order.restaurant.name }}</p>
+                <p><strong>Дата:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Адрес:</strong> {{ order.full_address }}</p>
+                <p><strong>Сумма:</strong> {{ order.total|add:order.delivery_fee }} ₽</p>
+                
+                {% if order.status in 'new,confirmed,preparing' %}
+                <form method="post" action="{% url 'cancel_order' order.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn-small">Сделать основным</button>
+                    <button type="submit" class="btn-small danger">Отменить</button>
                 </form>
-                <form method="post" action="{% url 'delete_address' address.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-small danger">Удалить</button>
-                </form>
+                {% endif %}
             </div>
         </div>
         {% empty %}
-        <p class="empty-message">Нет сохраненных адресов</p>
+        <p class="empty-message">Нет активных заказов</p>
         {% endfor %}
     </div>
 </div>
 
+<!-- История заказов -->
 <div class="profile-section">
     <h2 class="section-title">История заказов</h2>
     <div class="order-history">
-        {% for order in request.user.orders.all|dictsortreversed:"created_at" %}
+        {% for order in past_orders %}
         <div class="order-card">
             <div class="order-header">
                 <h3>Заказ #{{ order.id }}</h3>
@@ -121,14 +185,16 @@
             <div class="order-details">
                 <p><strong>Ресторан:</strong> {{ order.restaurant.name }}</p>
                 <p><strong>Дата:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
-                <p><strong>Адрес:</strong> {{ order.delivery_address }}</p>
-                <p><strong>Способ оплаты:</strong> {{ order.get_payment_method_display }}</p>
-                <p class="order-total"><strong>Сумма:</strong> {{ order.total }} ₽ (с доставкой: {{ order.total|add:order.delivery_fee }} ₽)</p>
-                <a href="{% url 'order_detail' order.id %}" class="btn-small">Подробнее</a>
+                <p><strong>Статус:</strong> {{ order.get_status_display }}</p>
+                
+                <form method="post" action="{% url 'repeat_order' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-small">Повторить заказ</button>
+                </form>
             </div>
         </div>
         {% empty %}
-        <p class="empty-message">Вы ещё не сделали ни одного заказа</p>
+        <p class="empty-message">Нет завершенных заказов</p>
         {% endfor %}
     </div>
 </div>

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.forms import ValidationError
 
 class CustomUser(AbstractUser):
     """Расширенная модель пользователя"""
@@ -80,6 +81,12 @@ class Restaurant(models.Model):
         blank=True,
         null=True,
         verbose_name="Логотип"
+    )
+    delivery_fee = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=200,
+        verbose_name="Стоимость доставки"
     )
 
     def __str__(self):
@@ -257,6 +264,11 @@ class UserAddress(models.Model):
 
     def __str__(self):
         return f"{self.city}, {self.street} {self.house} (кв. {self.apartment})"
+    
+    @property
+    def full_address(self):
+        return f"{self.city}, {self.street} {self.house}" + \
+            f"{', кв. ' + self.apartment if self.apartment else ''}"
 
 
 class Cart(models.Model):
@@ -419,6 +431,8 @@ class Order(models.Model):
             models.Index(fields=['status']),
             models.Index(fields=['created_at']),
         ]
+    
+    
 
     def __str__(self):
         return f"Заказ #{self.id} от {self.user.username}"
@@ -426,6 +440,21 @@ class Order(models.Model):
     @property
     def full_address(self):
         return str(self.delivery_address)
+    
+    def total_price(self):
+        return sum(item.total_price for item in self.items.all()) + self.delivery_fee
+    
+    def save(self, *args, **kwargs):
+        # Авторасчет общей суммы при сохранении
+        if not self.total:
+            self.total = self.items.aggregate(total=Sum('price'))['total'] or 0
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        # Проверка минимального заказа ресторана
+        subtotal = self.items.aggregate(total=sum('price'))['total'] or 0
+        if subtotal < self.restaurant.min_order:
+            raise ValidationError(f"Минимальный заказ для этого ресторана: {self.restaurant.min_order} ₽")
 
 
 class OrderItem(models.Model):

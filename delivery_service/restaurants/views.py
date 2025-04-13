@@ -7,7 +7,8 @@ from django.contrib import messages
 from django.views.generic import DetailView
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse
-
+from django.contrib.auth.views import LoginView
+from .forms import CustomAuthForm
 
 def home(request):
     return render(request, 'restaurants/home.html')
@@ -39,34 +40,71 @@ def profile(request):
     if not request.user.is_authenticated:
         return redirect('login')
 
+# views.py (дополнения)
 @login_required
 def profile(request):
-    profile_form = ProfileForm(instance=request.user)
-    address_form = AddressForm()
+    # Получение адресов текущего пользователя
+    addresses = request.user.addresses.all().order_by('-is_primary', '-created_at')
     
-    # Используем правильный related_name (addresses вместо user_addresses)
-    addresses = request.user.addresses.all()  # Изменено здесь
-
     if request.method == 'POST':
+        # Обработка формы профиля
         if 'profile_submit' in request.POST:
             profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
             if profile_form.is_valid():
                 profile_form.save()
+                messages.success(request, "Профиль успешно обновлен")
                 return redirect('profile')
-                
+        
+        # Обработка формы адреса
         elif 'address_submit' in request.POST:
             address_form = AddressForm(request.POST)
             if address_form.is_valid():
                 address = address_form.save(commit=False)
                 address.user = request.user
+                
+                # Если это первый адрес - сделать основным
+                if not request.user.addresses.exists():
+                    address.is_primary = True
+                
                 address.save()
+                messages.success(request, "Адрес успешно сохранен")
                 return redirect('profile')
-
-    return render(request, 'restaurants/profile.html', {
+                
+    # Инициализация форм
+    profile_form = ProfileForm(instance=request.user)
+    address_form = AddressForm()
+    
+    # Фильтрация заказов
+    active_statuses = ['new', 'confirmed', 'preparing', 'ready', 'delivering']
+    active_orders = request.user.orders.filter(status__in=active_statuses)
+    past_orders = request.user.orders.exclude(status__in=active_statuses)
+    
+    context = {
         'profile_form': profile_form,
         'address_form': address_form,
-        'addresses': addresses
-    })
+        'addresses': addresses,
+        'active_orders': active_orders,
+        'past_orders': past_orders
+    }
+    
+    return render(request, 'restaurants/profile.html', context)
+
+@login_required
+def set_primary_address(request, address_id):
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    request.user.addresses.update(is_primary=False)
+    address.is_primary = True
+    address.save()
+    messages.success(request, "Основной адрес успешно обновлен")
+    return redirect('profile')
+
+@login_required
+def delete_address(request, address_id):
+    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+    address.delete()
+    messages.success(request, "Адрес успешно удален")
+    return redirect('profile') 
+
 
 def register(request):
     if request.method == 'POST':
@@ -80,7 +118,7 @@ def register(request):
     
     return render(request, 'registration/register.html', {'form': form})
 
-@login_required
+@login_required(login_url='login')
 def cart_view(request):
     cart = request.user.cart
     items = cart.items.select_related('dish')
@@ -94,17 +132,20 @@ def add_to_cart(request, dish_id):
     dish = get_object_or_404(Dish, id=dish_id)
     cart, _ = Cart.objects.get_or_create(user=request.user)
     
+    quantity = int(request.POST.get('quantity', 1))
+    
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
         dish=dish,
-        defaults={'quantity': 1}
+        defaults={'quantity': quantity}
     )
     
     if not created:
-        cart_item.quantity += 1
+        cart_item.quantity += quantity
         cart_item.save()
     
-    return redirect('cart')
+    messages.success(request, f"«{dish.name}» добавлен в корзину!")
+    return redirect(request.META.get('HTTP_REFERER', 'cart'))
 
 @login_required
 def update_cart_item(request, item_id):
@@ -122,36 +163,64 @@ def remove_from_cart(request, item_id):
     cart_item.delete()
     return redirect('cart')
 
+
 @login_required
 def checkout(request):
     cart = request.user.cart
+    
+    # Проверка что корзина не пуста
+    if not cart.items.exists():
+        messages.error(request, "Ваша корзина пуста")
+        return redirect('cart')
+    
+    # Проверка что все блюда из одного ресторана
+    restaurant_ids = set(item.dish.restaurant.id for item in cart.items.all())
+    if len(restaurant_ids) > 1:
+        messages.error(request, "Все товары в корзине должны быть из одного ресторана")
+        return redirect('cart')
+    
     if request.method == 'POST':
-        # Создаем заказ
-        order = Order.objects.create(
-            user=request.user,
-            restaurant=cart.items.first().dish.restaurant,
-            total=cart.total_price,
-            delivery_address=request.POST.get('delivery_address'),
-            comments=request.POST.get('comments')
-        )
-        
-        # Переносим товары из корзины в заказ
-        for item in cart.items.all():
-            OrderItem.objects.create(
-                order=order,
-                dish=item.dish,
-                quantity=item.quantity,
-                price=item.dish.price
+        try:
+            address_id = request.POST.get('delivery_address')
+            address = get_object_or_404(UserAddress, id=address_id, user=request.user)
+            
+            restaurant = cart.items.first().dish.restaurant
+            
+            # Создаем заказ
+            order = Order.objects.create(
+                user=request.user,
+                restaurant=restaurant,
+                delivery_address=address,
+                total=cart.total_price,
+                delivery_fee=restaurant.delivery_fee,
+                comments=request.POST.get('comments', ''),
+                status='new'
             )
-        
-        # Очищаем корзину
-        cart.items.all().delete()
-        
-        return redirect('order_detail', order_id=order.id)
+            
+            # Переносим товары из корзины в заказ
+            for item in cart.items.all():
+                OrderItem.objects.create(
+                    order=order,
+                    dish=item.dish,
+                    quantity=item.quantity,
+                    price=item.dish.price,
+                    special_requests=item.special_requests
+                )
+            
+            # Очищаем корзину
+            cart.items.all().delete()
+            
+            messages.success(request, f"Заказ #{order.id} успешно оформлен!")
+            return redirect('order_detail', order_id=order.id)
+            
+        except Exception as e:
+            messages.error(request, f"Ошибка при оформлении заказа: {str(e)}")
+            return redirect('checkout')
     
     return render(request, 'restaurants/checkout.html', {
         'cart': cart,
-        'addresses': request.user.addresses.all()
+        'addresses': request.user.addresses.all(),
+        'restaurant': cart.items.first().dish.restaurant if cart.items.exists() else None
     })
 
 def order_detail(request, order_id):
@@ -171,21 +240,6 @@ def order_cancel(request, order_id):
     
     return redirect('order_detail', order_id=order.id)
 
-@login_required
-def set_primary_address(request, address_id):
-    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
-    # Сбросить все primary
-    request.user.addresses.update(is_primary=False)
-    # Установить выбранный
-    address.is_primary = True
-    address.save()
-    return redirect('profile')
-
-@login_required
-def delete_address(request, address_id):
-    address = get_object_or_404(UserAddress, id=address_id, user=request.user)
-    address.delete()
-    return redirect('profile')
 
 def menu(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
@@ -234,3 +288,96 @@ def cart_count(request):
     cart = request.user.cart
     count = cart.items.count() if hasattr(request.user, 'cart') else 0
     return JsonResponse({'count': count})
+
+def create_order(request):
+    cart = request.user.cart
+    if not cart.items.exists():
+        messages.error(request, "Корзина пуста")
+        return redirect('cart_view')
+    
+    try:
+        # Получаем ресторан из первого товара в корзине (предполагаем, что все из одного ресторана)
+        restaurant = cart.items.first().dish.restaurant
+        
+        # Создаем заказ
+        order = Order.objects.create(
+            user=request.user,
+            restaurant=restaurant,
+            delivery_address=request.user.addresses.filter(is_primary=True).first(),
+            total=0,  # Автоматически посчитается в save()
+            delivery_fee=restaurant.delivery_fee  # Предположим, что в Restaurant есть это поле
+        )
+        
+        # Переносим товары из корзины
+        for cart_item in cart.items.all():
+            OrderItem.objects.create(
+                order=order,
+                dish=cart_item.dish,
+                quantity=cart_item.quantity,
+                price=cart_item.dish.price,
+                special_requests=cart_item.special_requests
+            )
+        
+        # Очищаем корзину
+        cart.items.all().delete()
+        messages.success(request, "Заказ успешно оформлен!")
+        return redirect('order_detail', order_id=order.id)
+    
+    except Exception as e:
+        messages.error(request, f"Ошибка: {str(e)}")
+        return redirect('cart_view')
+    
+@login_required
+def restaurant_orders(request):
+    orders = Order.objects.filter(
+        restaurant__owner=request.user  # Предполагаем связь владельца в Restaurant
+    ).order_by('-created_at')
+    return render(request, 'restaurant/orders.html', {'orders': orders})
+
+def repeat_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    try:
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        
+        for item in order.items.all():
+            # Проверка доступности блюда
+            if not item.dish.is_available:
+                raise Exception(f"Блюдо '{item.dish.name}' больше недоступно")
+                
+            CartItem.objects.create(
+                cart=cart,
+                dish=item.dish,
+                quantity=item.quantity,
+                special_requests=item.special_requests
+            )
+            
+        messages.success(request, "Заказ добавлен в корзину!")
+    except Exception as e:
+        messages.error(request, str(e))
+    
+    return redirect('cart_view')
+
+def cancel_order(request, order_id):
+    # Получаем заказ или возвращаем 404
+    order = get_object_or_404(
+        Order, 
+        id=order_id, 
+        user=request.user  # Только владелец заказа может отменить
+    )
+    
+    # Проверяем, можно ли отменить заказ
+    if order.status in ['new', 'confirmed']:
+        order.status = 'canceled'
+        order.save()
+        messages.success(request, f"Заказ #{order.id} отменен")
+    else:
+        messages.error(request, "Нельзя отменить заказ в текущем статусе")
+    
+    return redirect('profile')
+
+class CustomLoginView(LoginView):
+    form_class = CustomAuthForm
+    template_name = 'registration/login.html'
+    extra_context = {'form': CustomAuthForm()}
+    pass

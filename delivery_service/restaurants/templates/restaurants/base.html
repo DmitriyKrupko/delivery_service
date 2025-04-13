@@ -14,10 +14,14 @@
         <li><a href="{% url 'home' %}">Главная</a></li>
         {% if user.is_authenticated %}
             <li><a href="{% url 'profile' %}">Профиль</a></li>
+            <li><a href="{% url 'cart' %}">Корзина (<span id="cart-counter">{{ request.user.cart.items.count }}</span>)
+                        </a>
+                    </li>
+                <li>
             <li>
-                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                <form action="{% url 'logout' %}" method="post" class="logout-form">
                     {% csrf_token %}
-                    <button type="submit" style="background: none; border: none; color: inherit; cursor: pointer; padding: 0; font: inherit;">Выйти</button>
+                    <button type="submit" class="btn-nav">Выйти</button>
                 </form>
             </li>
         {% else %}
@@ -42,9 +46,33 @@
     <div class="container">
         {% block content %}{% endblock %}
     </div>
-
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
     <footer>
         <p>&copy; 2023 FoodDelivery. Все права защищены.</p>
     </footer>
 </body>
 </html>
+
+{% block scripts %}
+<script>
+// Обновление счетчика корзины
+function updateCartCounter() {
+    fetch('{% url "cart_count" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('cart-counter').textContent = data.count;
+        });
+}
+
+// Вызываем при загрузке страницы
+document.addEventListener('DOMContentLoaded', updateCartCounter);
+</script>
+{% endblock %}

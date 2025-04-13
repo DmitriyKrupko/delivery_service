@@ -1,45 +1,44 @@
 from django.urls import path
-from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
-from . import views
+from .views import CustomLoginView
+from .views import (
+    home, restaurant_list, dish_list, 
+    profile, order_tracking, register,
+    cart_view, add_to_cart, update_cart_item, 
+    remove_from_cart, checkout, order_detail,
+    set_primary_address, delete_address, menu,
+    DishDetailView, cart_count, create_order, 
+    cancel_order, repeat_order
+)
 
 urlpatterns = [
-    # Главная страница должна быть первой
-    path('', views.home, name='home'),
-    
-    # Список ресторанов
-    path('restaurants/', views.restaurant_list, name='restaurant_list'),
-    
-    # Блюда конкретного ресторана
-    path('restaurants/<int:restaurant_id>/', views.dish_list, name='dish_list'),
-    
-    # Профиль и отслеживание
-    # Маршрут для страницы профиля
-    path('profile/', views.profile, name='profile'),
-    
-    #Отслеживание
-    path('tracking/', views.order_tracking, name='order_tracking'),
-   
-    #Регистрация
-    path('register/', views.register, name='register'),
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('profile/', views.profile, name='profile'),
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('cart/', views.cart_view, name='cart'),
-    path('cart/add/<int:dish_id>/', views.add_to_cart, name='add_to_cart'),
-    path('cart/update/<int:item_id>/', views.update_cart_item, name='update_cart'),
-    path('cart/remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
-    path('checkout/', views.checkout, name='checkout'),
-    path('orders/<int:order_id>/', views.order_detail, name='order_detail'),
-    path('orders/<int:order_id>/cancel/', views.order_cancel, name='order_cancel'),
-    path('address/set-primary/<int:address_id>/', views.set_primary_address, name='set_primary_address'),
-    path('address/delete/<int:address_id>/', views.delete_address, name='delete_address'),
-    path('menu/<int:restaurant_id>/', views.menu, name='menu'),
-    path('dish/<int:pk>/', views.DishDetailView.as_view(), name='dish_detail'),
-    path('add-to-cart/<int:dish_id>/', views.add_to_cart, name='add_to_cart'),
-    path('remove-from-cart/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
-    path('update-cart-item/<int:item_id>/', views.update_cart_item, name='update_cart_item'),
-    path('cart/', views.cart_view, name='cart'),
-    path('cart/count/', views.cart_count, name='cart_count'),
+    path('', home, name='home'),
+    path('restaurants/', restaurant_list, name='restaurant_list'),
+    path('restaurants/<int:restaurant_id>/', dish_list, name='dish_list'),
+    path('profile/', profile, name='profile'),
+    path('tracking/', order_tracking, name='order_tracking'),
+    path('register/', register, name='register'),
+    path('login/', CustomLoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),  
+    path('cart/', cart_view, name='cart'),
+    path('cart/add/<int:dish_id>/', add_to_cart, name='add_to_cart'),
+    path('cart/update/<int:item_id>/', update_cart_item, name='update_cart'),
+    path('cart/remove/<int:item_id>/', remove_from_cart, name='remove_from_cart'),
+    path('checkout/', checkout, name='checkout'),
+    path('orders/<int:order_id>/', order_detail, name='order_detail'),
+    path('menu/<int:restaurant_id>/', menu, name='menu'),
+    path('dish/<int:pk>/', DishDetailView.as_view(), name='dish_detail'),
+    path('cart/count/', cart_count, name='cart_count'),
+    path('order/create/', create_order, name='create_order'),
+    path('order/cancel/<int:order_id>/', cancel_order, name='cancel_order'),
+    path('order/repeat/<int:order_id>/', repeat_order, name='repeat_order'),
+    # Один экземпляр путей для адресов:
+    path('address/set-primary/<int:address_id>/', set_primary_address, name='set_primary_address'),
+    path('address/delete/<int:address_id>/', delete_address, name='delete_address'),
+    #Корзина
+    path('cart/', cart_view, name='cart'),
+    path('cart/add/<int:dish_id>/', add_to_cart, name='add_to_cart'),
+    path('cart/update/<int:item_id>/', update_cart_item, name='update_cart'),
+    path('cart/remove/<int:item_id>/', remove_from_cart, name='remove_from_cart'),
+    path('cart/count/', cart_count, name='cart_count'),
 ]

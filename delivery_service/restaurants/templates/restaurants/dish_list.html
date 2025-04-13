@@ -23,11 +23,16 @@
         
         <div class="dish-list">
             {% for dish in dishes %}
-                <div class="dish-card">
-                    <h3>{{ dish.name }}</h3>
-                    <p>{{ dish.description }}</p>
-                    <p class="dish-price">{{ dish.price }} ₽</p>
-                </div>
+            <div class="dish-card">
+                <h3>{{ dish.name }}</h3>
+                <p>{{ dish.description }}</p>
+                <p class="dish-price">{{ dish.price }} ₽</p>
+    
+                <form method="post" action="{% url 'add_to_cart' dish.id %}">
+                    {% csrf_token %}
+                     <button type="submit" class="btn">Добавить в корзину</button>
+                </form>
+            </div>
             {% endfor %}
         </div>
     </div>

@@ -15,7 +15,12 @@
                 <li><a href="{% url 'home' %}">Главная</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'profile' %}">Профиль</a></li>
-                    <li><a href="{% url 'logout' %}">Выйти</a></li>
+                    <li>
+                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="...">Выйти</button>
+                        </form>
+                    </li>
                 {% else %}
                     <li><a href="{% url 'login' %}">Войти</a></li>
                     <li><a href="{% url 'register' %}">Регистрация</a></li>

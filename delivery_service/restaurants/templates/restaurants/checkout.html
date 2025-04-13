@@ -9,29 +9,58 @@
         
         <div class="delivery-address">
             <h3>Адрес доставки</h3>
-            <select name="delivery_address" required>
-                {% for address in addresses %}
-                <option value="{{ address.full_address }}">{{ address.full_address }}</option>
-                {% endfor %}
-            </select>
+            {% if addresses %}
+                <select name="delivery_address" required class="form-control">
+                    {% for address in addresses %}
+                    <option value="{{ address.id }}" {% if address.is_primary %}selected{% endif %}>
+                        {{ address.full_address }}
+                    </option>
+                    {% endfor %}
+                </select>
+            {% else %}
+                <div class="alert alert-warning">
+                    У вас нет сохранённых адресов. Пожалуйста, <a href="{% url 'profile' %}">добавьте адрес</a> перед оформлением заказа.
+                </div>
+            {% endif %}
         </div>
         
         <div class="order-comments">
             <h3>Комментарий к заказу</h3>
-            <textarea name="comments" rows="4"></textarea>
+            <textarea name="comments" rows="4" class="form-control"></textarea>
         </div>
         
         <div class="order-summary">
             <h3>Ваш заказ</h3>
-            <ul>
+            <ul class="order-items">
                 {% for item in cart.items.all %}
-                <li>{{ item.dish.name }} x{{ item.quantity }} - {{ item.total_price }} ₽</li>
+                <li>
+                    {{ item.dish.name }} 
+                    <span class="quantity">x{{ item.quantity }}</span>
+                    <span class="price">{{ item.total_price }} ₽</span>
+                </li>
                 {% endfor %}
             </ul>
-            <h4>Итого: {{ cart.total_price }} ₽</h4>
+            <div class="order-totals">
+                <div class="total-row">
+                    <span>Стоимость товаров:</span>
+                    <span>{{ cart.total_price }} ₽</span>
+                </div>
+                <div class="total-row">
+                    <span>Доставка:</span>
+                    <span>{{ cart.items.first.dish.restaurant.delivery_fee }} ₽</span>
+                </div>
+                <div class="total-row grand-total">
+                    <span>Итого:</span>
+                    <span>{{ cart.total_price|add:cart.items.first.dish.restaurant.delivery_fee }} ₽</span>
+                </div>
+            </div>
         </div>
         
-        <button type="submit" class="btn-primary">Подтвердить заказ</button>
+        {% if addresses %}
+        <button type="submit" class="btn btn-primary btn-lg btn-block">
+            Подтвердить заказ
+        </button>
+        {% endif %}
     </form>
 </div>
 {% endblock %}

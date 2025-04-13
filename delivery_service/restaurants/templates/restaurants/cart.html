@@ -10,7 +10,8 @@
         <div class="cart-item">
             <div class="item-info">
                 <h4>{{ item.dish.name }}</h4>
-                <p>{{ item.dish.description }}</p>
+                <p>{{ item.dish.restaurant.name }}</p>
+                <p>{{ item.dish.price }} ₽ x {{ item.quantity }} = {{ item.total_price }} ₽</p>
                 {% if item.special_requests %}
                 <p class="special-requests">Примечание: {{ item.special_requests }}</p>
                 {% endif %}
@@ -20,13 +21,12 @@
                 <form method="post" action="{% url 'update_cart' item.id %}">
                     {% csrf_token %}
                     <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
-                    <button type="submit">Обновить</button>
+                    <button type="submit" class="btn-update">Обновить</button>
                 </form>
-                <a href="{% url 'remove_from_cart' item.id %}" class="btn-danger">Удалить</a>
-            </div>
-            
-            <div class="item-price">
-                {{ item.total_price }} ₽
+                <form method="post" action="{% url 'remove_from_cart' item.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-danger">Удалить</button>
+                </form>
             </div>
         </div>
         {% endfor %}
@@ -37,7 +37,20 @@
         <a href="{% url 'checkout' %}" class="btn-primary">Оформить заказ</a>
     </div>
     {% else %}
-    <p>Ваша корзина пуста</p>
+    <div class="empty-cart">
+        <p>Ваша корзина пуста</p>
+        <a href="{% url 'restaurant_list' %}" class="btn-primary">Перейти к ресторанам</a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
+
+<script>
+// Обновление количества через AJAX
+document.querySelectorAll('.quantity-selector input').forEach(input => {
+    input.addEventListener('change', function() {
+        const form = this.closest('form');
+        form.submit();
+    });
+});
+</script>

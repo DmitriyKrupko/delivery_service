@@ -286,3 +286,32 @@ textarea {
     color: #27ae60;
     font-size: 1.1em;
 }
+
+nav li {
+    display: flex;
+    align-items: center; /* Выравнивание по вертикали */
+}
+
+.btn-nav {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    font-weight: 500;
+    transition: color 0.3s;
+    /* Новые свойства */
+    text-decoration: none; /* Убрать подчеркивание */
+    line-height: 1.5;      /* Совпадает с <a> */
+    display: inline-block; /* Для правильного позиционирования */
+}
+
+.btn-nav:hover {
+    color: #3498db !important; /* Приоритет над другими стилями */
+}
+
+.logout-form {
+    display: inline-block;
+    vertical-align: middle;
+}
