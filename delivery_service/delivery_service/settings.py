@@ -57,7 +57,7 @@ ROOT_URLCONF = 'delivery_service.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.normpath(os.path.join(BASE_DIR, 'templates'))],  # Используем normpath
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

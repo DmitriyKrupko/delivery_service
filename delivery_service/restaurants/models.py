@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.forms import ValidationError
+from django.db.models import Sum
 
 class CustomUser(AbstractUser):
     """Расширенная модель пользователя"""
@@ -441,21 +442,21 @@ class Order(models.Model):
     def full_address(self):
         return str(self.delivery_address)
     
+    @property
     def total_price(self):
         return sum(item.total_price for item in self.items.all()) + self.delivery_fee
     
     def save(self, *args, **kwargs):
         # Авторасчет общей суммы при сохранении
         if not self.total:
-            self.total = self.items.aggregate(total=Sum('price'))['total'] or 0
+            self.total = self.total_price
         super().save(*args, **kwargs)
 
     def clean(self):
         # Проверка минимального заказа ресторана
-        subtotal = self.items.aggregate(total=sum('price'))['total'] or 0
+        subtotal = sum(item.price * item.quantity for item in self.items.all())
         if subtotal < self.restaurant.min_order:
             raise ValidationError(f"Минимальный заказ для этого ресторана: {self.restaurant.min_order} ₽")
-
 
 class OrderItem(models.Model):
     """Элемент заказа"""

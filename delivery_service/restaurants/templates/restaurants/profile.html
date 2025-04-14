@@ -156,7 +156,7 @@
                 <p><strong>Ресторан:</strong> {{ order.restaurant.name }}</p>
                 <p><strong>Дата:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
                 <p><strong>Адрес:</strong> {{ order.full_address }}</p>
-                <p><strong>Сумма:</strong> {{ order.total|add:order.delivery_fee }} ₽</p>
+                <p><strong>Сумма:</strong> {{ order.total|add:order.delivery_fee }} BYN</p>
                 
                 {% if order.status in 'new,confirmed,preparing' %}
                 <form method="post" action="{% url 'cancel_order' order.id %}">

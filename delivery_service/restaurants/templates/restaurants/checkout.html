@@ -43,15 +43,15 @@
             <div class="order-totals">
                 <div class="total-row">
                     <span>Стоимость товаров:</span>
-                    <span>{{ cart.total_price }} ₽</span>
+                    <span>{{ cart.total_price }} BYN</span>
                 </div>
                 <div class="total-row">
                     <span>Доставка:</span>
-                    <span>{{ cart.items.first.dish.restaurant.delivery_fee }} ₽</span>
+                    <span>{{ cart.items.first.dish.restaurant.delivery_fee }} BYN</span>
                 </div>
                 <div class="total-row grand-total">
                     <span>Итого:</span>
-                    <span>{{ cart.total_price|add:cart.items.first.dish.restaurant.delivery_fee }} ₽</span>
+                    <span>{{ cart.total_price|add:cart.items.first.dish.restaurant.delivery_fee }} BYN</span>
                 </div>
             </div>
         </div>

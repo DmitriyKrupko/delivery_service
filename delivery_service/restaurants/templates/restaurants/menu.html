@@ -4,30 +4,54 @@
 {% block content %}
 <div class="container">
     <h1>{{ restaurant.name }}</h1>
-    <p>{{ restaurant.description }}</p>
+    <p class="restaurant-description">{{ restaurant.description }}</p>
     
-    {% for category in categories %}
-    <div class="category-section">
-        <h2>{{ category.name }}</h2>
-        
-        <div class="row">
-            {% for dish in category.dishes.all %}
-            <div class="col-md-4 mb-4">
-                <div class="card dish-card">
-                    {% if dish.image %}
-                    <img src="{{ dish.image.url }}" class="card-img-top" alt="{{ dish.name }}">
-                    {% endif %}
-                    
-                    <div class="card-body">
-                        <h5 class="card-title">{{ dish.name }}</h5>
-                        <p class="card-text">{{ dish.description }}</p>
-                        <p class="price">{{ dish.price }} ₽</p>
+    {% if menu_data %}
+        {% for category_data in menu_data %}
+            <div class="category-section">
+                <h2>{{ category_data.category.name }}</h2>
+                
+                {% if category_data.dishes %}
+                    <div class="row">
+                        {% for dish in category_data.dishes %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card dish-card">
+                                    {% if dish.image %}
+                                    <img src="{{ dish.image.url }}" class="card-img-top" alt="{{ dish.name }}">
+                                    {% endif %}
+                                    
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ dish.name }}</h5>
+                                        <p class="card-text">{{ dish.description }}</p>
+                                        <p class="price">{{ dish.price }} ₽</p>
+                                        <form method="post" action="{% url 'add_to_cart' dish.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-primary">В корзину</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
-                </div>
+                {% else %}
+                    <div class="empty-category">
+                        <div class="empty-message">
+                            <i class="fas fa-utensils"></i>
+                            <p>В этой категории пока нет блюд</p>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
-            {% endfor %}
+        {% endfor %}
+    {% else %}
+        <div class="empty-menu">
+            <div class="empty-message">
+                <i class="fas fa-clock"></i>
+                <h3>Меню в разработке</h3>
+                <p>Наш шеф-повар готовит для вас что-то особенное!</p>
+                <p>Блюда появятся здесь очень скоро</p>
+            </div>
         </div>
-    </div>
-    {% endfor %}
+    {% endif %}
 </div>
 {% endblock %}

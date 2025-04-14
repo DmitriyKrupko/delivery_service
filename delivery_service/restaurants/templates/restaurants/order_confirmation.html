@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Подтверждение заказа #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h2 class="mb-0">Заказ успешно оформлен!</h2>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-success">
+                <h4 class="alert-heading">Спасибо за ваш заказ!</h4>
+                <p>Номер вашего заказа: <strong>#{{ order.id }}</strong></p>
+                <hr>
+                <p class="mb-0">Статус: <span class="badge bg-primary">{{ order.get_status_display }}</span></p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Состав заказа:</h5>
+                    <ul class="list-group mb-4">
+                        {% for item in order.items.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ item.dish.name }} × {{ item.quantity }}
+                            <span class="badge bg-primary rounded-pill">{{ item.total_price }} ₽</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Итого:</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Сумма заказа:</span>
+                                <span>{{ order.total }} ₽</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Доставка:</span>
+                                <span>{{ order.delivery_fee }} ₽</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Всего к оплате:</span>
+                                <span>{{ order.total_price }} ₽</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'home' %}" class="btn btn-primary">На главную</a>
+                <a href="{% url 'order_tracking' %}" class="btn btn-outline-secondary ms-2">Отслеживать заказ</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

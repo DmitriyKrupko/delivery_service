@@ -8,7 +8,7 @@ from .views import (
     remove_from_cart, checkout, order_detail,
     set_primary_address, delete_address, menu,
     DishDetailView, cart_count, create_order, 
-    cancel_order, repeat_order
+    cancel_order, repeat_order, OrderConfirmationView
 )
 
 urlpatterns = [
@@ -41,4 +41,5 @@ urlpatterns = [
     path('cart/update/<int:item_id>/', update_cart_item, name='update_cart'),
     path('cart/remove/<int:item_id>/', remove_from_cart, name='remove_from_cart'),
     path('cart/count/', cart_count, name='cart_count'),
+    path('order/confirm/<int:order_id>/', OrderConfirmationView.as_view(), name='order_confirmation')
 ]
