@@ -25,8 +25,11 @@ def restaurant_list(request):
 
 def dish_list(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
-    dishes = restaurant.dishes.all()
-    return render(request, 'restaurants/dish_list.html', {'restaurant': restaurant, 'dishes': dishes})
+    dishes = Dish.objects.filter(restaurant=restaurant, is_available=True)
+    return render(request, 'restaurants/dish_list.html', {
+        'restaurant': restaurant,
+        'dishes': dishes
+    })
 
 def order_tracking(request):
     return render(request, 'restaurants/order_tracking.html')
