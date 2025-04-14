@@ -1,44 +1,74 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная страница</title>
-    <link rel="stylesheet" href="{% static 'restaurants/css/styles.css' %}">
-</head>
-<body>
-    <header>
-        <h1>Добро пожаловать в сервис доставки!</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}">Главная</a></li>
-                {% if user.is_authenticated %}
-                    <!-- Показываем кнопку "Профиль" и "Выйти" для авторизованных пользователей -->
-                    <li><a href="{% url 'profile' %}">Профиль</a></li>
-                    <li>
-                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" style="...">Выйти</button>
-                        </form>
-                    </li>
-                {% else %}
-                    <!-- Показываем кнопки "Войти" и "Регистрация" для неавторизованных пользователей -->
-                    <li><a href="{% url 'login' %}">Войти</a></li>
-                    <li><a href="{% url 'register' %}">Регистрация</a></li>
-                {% endif %}
-                <li><a href="{% url 'restaurant_list' %}">Рестораны</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section>
-            <h2>Почему выбирают нас?</h2>
-            <p>Быстрая доставка, широкий выбор ресторанов и удобное отслеживание заказов.</p>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2023 Сервис доставки. Все права защищены.</p>
-    </footer>
-</body>
-</html>
+
+{% block title %}Главная | FoodDelivery{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    {% if not user.is_authenticated %}
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Добро пожаловать!</h4>
+                </div>
+                <div class="card-body text-center">
+                    <p class="lead">Для доступа к сервису требуется авторизация</p>
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'login' %}" class="btn btn-lg btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Войти
+                        </a>
+                        <a href="{% url 'register' %}" class="btn btn-lg btn-outline-primary">
+                            <i class="bi bi-person-plus"></i> Зарегистрироваться
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="jumbotron bg-light p-5 rounded-3">
+                <h1 class="display-4">Добро пожаловать, {{ user.username }}!</h1>
+                <p class="lead">Выберите ресторан из нашего каталога</p>
+                <hr class="my-4">
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'restaurant_list' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-shop"></i> Все рестораны
+                    </a>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-person"></i> Мой профиль
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="bi bi-star"></i> Рекомендуем</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Здесь можно вывести рекомендуемые рестораны -->
+                    <p>Попробуйте наши лучшие предложения!</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="bi bi-clock-history"></i> Недавние заказы</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Здесь можно вывести историю заказов -->
+                    <p>Ваши последние заказы будут отображаться здесь</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
